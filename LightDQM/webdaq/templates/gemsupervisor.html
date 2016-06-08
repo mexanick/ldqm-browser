@@ -31,7 +31,7 @@
 
 </head>
 
-<body onload="{{mon|yesno:'monitor_(),'}}">
+<body>
   
 <!-- Navigation -->
 <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
@@ -71,7 +71,7 @@
   <!-- /.container -->
 </nav>
 
-<div class="container" style="background-color:#ffffff">
+<div class="container" id="statustable" style="background-color:#ffffff">
 <form action="/gemsupervisor/" method="post" class="form-inline">
     {% csrf_token %}
     {{ form}}
@@ -80,35 +80,17 @@
     {%endif%}
     {%if state == "configured"%}
       <button class="btn btn-primary" name="halt">Halt</button>
+      <button type="submit" class="btn btn-primary" name="run">Run</button>
     {%endif%}
 
     {%if state == "running"%}
       <button class="btn btn-disabled" disabled name="halt">Halt</button>
+      <button type="submit" class="btn btn-primary" id="stop" name="stop">Stop</button>
     {%endif%}
 </form> 
 <br>
-</div>
 {%if state in "configured,running" %}
-  {%if state == "running"%}
-  <form name="monitor" id="monitor" method="post">
-    {% csrf_token %}
-    <input hidden type="text" name="monitoring" value="submit"/>
-  </form>
-  {%endif%}
-  <div class="container" style="background-color:#ffffff">
     <div class="row">
-      <form class="form-inline" method="post">
-        {% csrf_token %}
-        <label for="ntriggers">Number of triggers to take</label>
-        <input type="number" class="form-control" id="ntriggers" name="nevents" value=100>
-        {%if state == "configured"%}
-          <button type="submit" class="btn btn-primary" name="run">Run</button>
-        {%endif%}
-        {%if state == "running"%}
-          <button type="submit" class="btn btn-primary" {{mon|yesno:"disabled,"}} id="stop" name="stop">Stop</button>
-        {%endif%}
-      </form>
-      <br>
       <div class="col-lg-6">
         <div class="panel panel-default">
           <div class="panel-heading">
@@ -141,31 +123,34 @@
     </div>
   </div>
 {%endif%}
-  <!-- Form autosubmit -->
-  <script type="text/javascript">
-    function monitor_(){
-
-      document.getElementById("stop").disabled = false;
-      var auto = setTimeout(function(){ if (document.readyState !== 'complete') return; autoRefresh(); }, 100);
-      
-      function submitform(){
-        //alert('test');
-        if (document.readyState !== 'complete') return;
-        document.forms["monitor"].submit();
-        document.getElementById("stop").disabled = true;
-      }
-      
-      function autoRefresh(){
-        clearTimeout(auto);
-        auto = setTimeout(function(){ submitform(); autoRefresh(); }, 100000000);
-      }
-    }
-  </script>
 
   <!-- jQuery -->
   <script src="{% static 'js/jquery.js' %}"></script>
   <!-- Bootstrap Core JavaScript -->
   <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+  <!-- Form autosubmit -->
+  <script type="text/javascript">
+    function refreshTime() {
+      $.ajax({
+        //url: 'gemsupervisor',
+        //url: '#',
+        type: 'GET',
+        data:'monitoring',
+        success: function (data) {
+          console.log("success function called");
+          $("#statustable").html(data);
+        }
+      });
+    }
+    
+    
+    $( document ).ready(function () {
+      console.log("setting interval");
+      setTimeout(refreshTime,5000);
+    });
+  </script>
+
 </body>
 
 </html>

@@ -5,4 +5,6 @@ from django.core.urlresolvers import reverse_lazy
 
 urlpatterns = patterns('',
     url(r'^$', gemsupervisor),
+    #url(r'^control', gemsupervisor),
+    #url(r'^monitor', monitor),
 )

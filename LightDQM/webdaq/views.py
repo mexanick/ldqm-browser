@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.shortcuts import HttpResponse
 from webdaq.forms import *
 from ldqm_db.models import *
 import uhal
@@ -50,10 +51,13 @@ def gemsupervisor(request):
     status.Report(verbosity)
     out.stop()
     shtml = out.capturedtext
-    with open("webdaq/templates/amc13status.html", "w") as text_file:
+    with open("/tmp/amc13status.html", "w") as text_file:
       text_file.write(shtml)
-    with open("webdaq/templates/amcstatus.html", "w") as text_file:
-        text_file.write(m_AMCmanager.getStatus(verbosity))
+    with open("/tmp/amcstatus.html", "w") as text_file:
+      text_file.write(m_AMCmanager.getStatus(verbosity))
+    call(["mv /tmp/amc13status.html webdaq/templates/amc13status.html"],shell=True)
+    call(["mv /tmp/amcstatus.html webdaq/templates/amcstatus.html"],shell=True)
+
 
   def parkData():
 #call root converter
@@ -196,7 +200,6 @@ def gemsupervisor(request):
       print "running"
       #form = ConfigForm()
       updateStatus()
-      nevents = int(request.POST['nevents'])
       t = threading.Thread(target = m_AMC13manager.startDataTaking, args = ["/tmp/"+m_filename+".dat"])
       t.start()
       state = 'running'
@@ -208,13 +211,24 @@ def gemsupervisor(request):
       t_p = threading.Thread(target = parkData)
       t_p.start()
       state = 'configured'
-    elif "monitoring" in request.POST:
-      updateStatus()
+    #elif "monitoring" in request.POST:
+    #  if state == 'running' or state == 'configured':
+    #    print "run update status"
+    #    updateStatus()
+    #  else:
+    #    pass
       #pass
       #if lt:
       #  updateStatus()
       #else:
       #  pass
+  elif request.GET: 
+    if "monitoring" in request.GET and (state == 'running' or state == 'configured'):
+      print "Monitoring called"
+      updateStatus()
+      #return render(request, 'status.html')
+    else:
+      print "state is halted"
   else:
     form = ConfigForm()
     state = 'halted'
@@ -222,3 +236,6 @@ def gemsupervisor(request):
                                                'form':form,
                                                'state':state})
 
+def monitor(request):
+  if request.GET:
+    print "Cazo-Cazo"
